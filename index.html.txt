@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>KCORE — Creator Application</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: #080808;
+    color: #e0e0e0;
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    padding: 0 0 80px;
+  }
+  .header {
+    background: #080808;
+    border-bottom: 1px solid #161616;
+    padding: 40px 40px 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::after {
+    content: '';
+    position: absolute;
+    top: -80px; right: -80px;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, #7C3AED22 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 28px;
+  }
+  .logo-dot { width: 7px; height: 7px; background: #9333EA; border-radius: 50%; }
+  .logo-text {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.35em; color: #9333EA; text-transform: uppercase;
+  }
+  .header-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 32px; font-weight: 700; color: #fff;
+    line-height: 1.15; margin-bottom: 20px;
+  }
+  .header-title span { color: #9333EA; }
+  .header-desc { border-left: 2px solid #7C3AED; padding-left: 16px; max-width: 500px; }
+  .header-desc p { font-size: 13.5px; color: #555; line-height: 1.85; }
+
+  .progress-wrap { height: 2px; background: #141414; }
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #6B21A8, #9333EA);
+    width: 0%; transition: width 0.4s ease;
+  }
+
+  .form-body {
+    padding: 32px 40px 0;
+    display: flex; flex-direction: column; gap: 20px;
+  }
+
+  .card {
+    background: #0d0d0d;
+    border: 1px solid #1a1a1a;
+    border-radius: 12px;
+    padding: 24px 26px;
+    transition: border-color 0.2s;
+  }
+  .card:focus-within { border-color: #6B21A8; }
+
+  .card-tag {
+    font-size: 10px; font-weight: 600;
+    letter-spacing: 0.25em; color: #7C3AED;
+    text-transform: uppercase; margin-bottom: 6px;
+  }
+  .card-label {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 15px; font-weight: 500; color: #ececec;
+    margin-bottom: 5px; display: block;
+  }
+  .card-hint { font-size: 12px; color: #3d3d3d; margin-bottom: 16px; line-height: 1.6; }
+
+  .field-input {
+    width: 100%; background: #080808;
+    border: 1px solid #222; border-radius: 7px;
+    padding: 11px 14px; font-size: 14px; color: #ddd;
+    font-family: 'Inter', sans-serif; outline: none;
+    transition: border-color 0.2s; resize: none;
+  }
+  .field-input::placeholder { color: #2e2e2e; }
+  .field-input:focus { border-color: #7C3AED; background: #0a0a0a; }
+
+  .mcq-grid { display: flex; flex-direction: column; gap: 9px; }
+  .mcq-option {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px; background: #080808;
+    border: 1px solid #1e1e1e; border-radius: 8px;
+    cursor: pointer; transition: border-color 0.2s, background 0.2s;
+    user-select: none;
+  }
+  .mcq-option:hover { border-color: #6B21A8; }
+  .mcq-option.selected { border-color: #9333EA; background: #0f0720; }
+
+  .mcq-radio {
+    width: 17px; height: 17px; border-radius: 50%;
+    border: 1.5px solid #2e2e2e; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .mcq-option.selected .mcq-radio { border-color: #9333EA; background: #9333EA; }
+  .mcq-radio-inner { width: 6px; height: 6px; border-radius: 50%; background: #fff; display: none; }
+  .mcq-option.selected .mcq-radio-inner { display: block; }
+  .mcq-label { font-size: 13.5px; color: #888; transition: color 0.2s; flex: 1; }
+  .mcq-option.selected .mcq-label { color: #c4b5fd; }
+
+  .mcq-option.has-other { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .mcq-option.has-other .mcq-top { display: flex; align-items: center; gap: 12px; width: 100%; }
+  .mcq-other-input {
+    width: 100%; background: #0d0d0d;
+    border: 1px solid #2a2a2a; border-radius: 6px;
+    padding: 9px 12px; font-size: 13px; color: #ddd;
+    font-family: 'Inter', sans-serif; outline: none;
+    display: none; transition: border-color 0.2s;
+  }
+  .mcq-other-input:focus { border-color: #7C3AED; }
+  .mcq-option.selected .mcq-other-input { display: block; }
+
+  /* hidden inputs to carry MCQ values into Formspree */
+  .hidden-field { display: none; }
+
+  .form-footer {
+    padding: 28px 40px 0;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .submit-btn {
+    width: 100%; padding: 15px;
+    background: #7C3AED; border: none; border-radius: 9px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 15px; font-weight: 600; color: #fff;
+    cursor: pointer; letter-spacing: 0.05em;
+    transition: background 0.2s, transform 0.1s;
+  }
+  .submit-btn:hover:not(:disabled) { background: #6D28D9; }
+  .submit-btn:active:not(:disabled) { transform: scale(0.995); }
+  .submit-btn:disabled { background: #1e1246; color: #4a3880; cursor: not-allowed; }
+
+  .footer-note { font-size: 11px; color: #2e2e2e; text-align: center; letter-spacing: 0.04em; }
+
+  /* loading state */
+  .submit-btn.loading { background: #6B21A8; cursor: wait; }
+
+  /* success */
+  .success-screen {
+    display: none; padding: 80px 40px; text-align: center;
+  }
+  .success-icon {
+    width: 64px; height: 64px; background: #0f0720;
+    border: 1px solid #7C3AED; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 24px; font-size: 24px; color: #9333EA;
+  }
+  .success-screen h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px; font-weight: 600; color: #fff; margin-bottom: 10px;
+  }
+  .success-screen p { font-size: 13px; color: #444; line-height: 1.8; }
+
+  /* error banner */
+  .error-banner {
+    display: none; margin: 0 40px;
+    padding: 12px 16px; background: #1a0a0a;
+    border: 1px solid #7f1d1d; border-radius: 8px;
+    font-size: 13px; color: #f87171; margin-top: 16px;
+  }
+
+  @media (max-width: 600px) {
+    .header, .form-body, .form-footer, .error-banner { padding-left: 20px; padding-right: 20px; }
+    .header-title { font-size: 24px; }
+    .card { padding: 20px 18px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="formView">
+  <div class="header">
+    <div class="logo">
+      <div class="logo-dot"></div>
+      <div class="logo-text">KCORE Studio</div>
+    </div>
+    <h1 class="header-title">Creator <span>Application</span></h1>
+    <div class="header-desc">
+      <p>We work with a select few.</p>
+      <p>If you're here, you already know your content is worth more than it's delivering.</p>
+      <p>90 seconds. Be direct.</p>
+    </div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+  <!-- 
+    ════════════════════════════════════════
+    REPLACE THE ACTION URL BELOW WITH YOUR
+    FORMSPREE ENDPOINT:
+    https://formspree.io/f/YOUR_CODE_HERE
+    ════════════════════════════════════════
+  -->
+  <form id="kcoreForm" action="https://formspree.io/f/https://formspree.io/f/xeebozar" method="POST">
+
+    <!-- Hidden inputs carry MCQ selections into the email -->
+    <input type="hidden" name="Scale" id="hidden_q3"/>
+    <input type="hidden" name="Publishing Frequency" id="hidden_q4"/>
+    <input type="hidden" name="Monthly Budget" id="hidden_q5"/>
+    <!-- Formspree redirect after submit -->
+    <input type="hidden" name="_next" value=""/>
+
+    <div class="form-body">
+
+      <!-- Q1 -->
+      <div class="card">
+        <div class="card-tag">01 — Identity</div>
+        <label class="card-label" for="q1">What's your handle and primary platform?</label>
+        <div class="card-hint">Instagram, YouTube, LinkedIn — wherever you're most active.</div>
+        <input class="field-input" id="q1" name="Handle & Platform" type="text"
+          placeholder="@yourhandle · Platform" oninput="updateProgress()" required/>
+      </div>
+
+      <!-- Q2 -->
+      <div class="card">
+        <div class="card-tag">02 — Channel</div>
+        <label class="card-label" for="q2">What does your channel do, and who is it actually for?</label>
+        <div class="card-hint">Skip the elevator pitch. Tell us what you make and who it's built for.</div>
+        <textarea class="field-input" id="q2" name="Channel Description" rows="3"
+          placeholder="e.g. Short-form finance education for first-gen investors aged 22–35..."
+          oninput="updateProgress()" required></textarea>
+      </div>
+
+      <!-- Q3 Scale -->
+      <div class="card">
+        <div class="card-tag">03 — Scale</div>
+        <div class="card-label">Where are you right now?</div>
+        <div class="card-hint">Current follower count on your primary platform.</div>
+        <div class="mcq-grid" id="q3">
+          <div class="mcq-option" onclick="selectMCQ('q3','hidden_q3',this)">
+            <div class="mcq-radio"><div class="mcq-radio-inner"></div></div>
+            <div class="mcq-label">Just starting out — under 5K</div>
+          </div>
+          <div class="mcq-option" onclick="selectMCQ('q3','hidden_q3',this)">
+            <div class="mcq-radio"><div class="mcq-radio-inner"></div></div>
+            <div class="mcq-label">Growing — 5K to 50K</div>
+          </div>
+          <div class="mcq-option" onclick="selectMCQ('q3','hidden_q3',this)">
+            <div class="mcq-radio"><div class="mcq-radio-inner"></div></div>
+            <div class="mcq-label">Established — 50K to 500K</div>
+          </div>
+          <div class="mcq-option" onclick="selectMCQ('q3','hidden_q3',this)">
+            <div class="mcq-radio"><div class="mcq-radio-inner"></div></div>
+            <div class="mcq-label">At scale — 500K+</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Q4 Cadence -->
+      <div class="card">
+        <div class="card-tag">04 — Cadence</div>
+        <div class="card-label">How often are you publishing right now?</div>
+        <div class="card-hint">Be honest. Inconsistency is something we solve.</div>
+        <div class="mcq-grid" id="q4">
+          <div class="mcq-option" onclick="selectMCQ('q4','hidden_q4',this)">
+            <div class="mcq-radio"><div class="mcq-radio-inner"></div></div>
+            <div class="mcq-label">Less than once a week</div>
+          </div>
+          <div class="mcq-option" onclick="selectMCQ('q4','hidden_q4',this)">
+            <div class="mcq-radio"><div class="mcq-radio-inner"></div></div>
+            <div class="mcq-label">1–3x per week</div>
+          </div>
+          <div class="mcq-option" onclick="selectMCQ('q4','hidden_q4',this)">
+            <div class="mcq-radio"><div class="mcq-radio-inner"></div></div>
+            <div class="mcq-label">Daily</div>
+          </div>
+          <div class="mcq-option" onclick="selectMCQ('q4','hidden_q4',this)">
+            <div class="mcq-radio"><div class="mcq-radio-inner"></div></div>
+            <div class="mcq-label">Inconsistent — that's part of the problem</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Q5 Budget -->
+      <div class="card">
+        <div class="card-tag">05 — Budget</div>
+        <div class="card-label">What's your monthly content budget?</div>
+        <div class="card-hint">No judgment. This helps us scope the right solution for you.</div>
+        <div class="mcq-grid" id="q5">
+          <div class="mcq-option" onclick="selectMCQ('q5','hidden_q5',this)">
+            <div class="mcq-radio"><div class="mcq-radio-inner"></div></div>
+            <div class="mcq-label">Under $1,000</div>
+          </div>
+          <div class="mcq-option" onclick="selectMCQ('q5','hidden_q5',this)">
+            <div class="mcq-radio"><div class="mcq-radio-inner"></div></div>
+            <div class="mcq-label">$1,000 – $1,500</div>
+          </div>
+          <div class="mcq-option" onclick="selectMCQ('q5','hidden_q5',this)">
+            <div class="mcq-radio"><div class="mcq-radio-inner"></div></div>
+            <div class="mcq-label">$1,500 – $3,000</div>
+          </div>
+          <div class="mcq-option" onclick="selectMCQ('q5','hidden_q5',this)">
+            <div class="mcq-radio"><div class="mcq-radio-inner"></div></div>
+            <div class="mcq-label">$3,000 – $5,000</div>
+          </div>
+          <div class="mcq-option" onclick="selectMCQ('q5','hidden_q5',this)">
+            <div class="mcq-radio"><div class="mcq-radio-inner"></div></div>
+            <div class="mcq-label">$5,000+</div>
+          </div>
+          <div class="mcq-option has-other" onclick="selectMCQ('q5','hidden_q5',this)">
+            <div class="mcq-top">
+              <div class="mcq-radio"><div class="mcq-radio-inner"></div></div>
+              <div class="mcq-label">Other — let me specify</div>
+            </div>
+            <input class="mcq-other-input" id="q5other" type="text"
+              placeholder="Tell us your budget or preferred arrangement..."
+              oninput="syncOther(); updateProgress(); event.stopPropagation();"
+              onclick="event.stopPropagation();"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- Q6 -->
+      <div class="card">
+        <div class="card-tag">06 — The Real Question</div>
+        <label class="card-label" for="q6">What does your content need to do better — and why hasn't it happened yet?</label>
+        <div class="card-hint">This one tells us everything. Give it 30 seconds.</div>
+        <textarea class="field-input" id="q6" name="Content Challenge" rows="4"
+          placeholder="e.g. My videos get views but don't convert. I've tried better hooks but production quality is holding me back..."
+          oninput="updateProgress()" required></textarea>
+      </div>
+
+    </div>
+
+    <div class="error-banner" id="errorBanner">
+      Something went wrong. Please try again or contact us directly.
+    </div>
+
+    <div class="form-footer">
+      <button type="submit" class="submit-btn" id="submitBtn" disabled>Submit Application →</button>
+      <div class="footer-note">KCORE reviews every submission personally · You'll hear back within 48 hours</div>
+    </div>
+
+  </form>
+</div>
+
+<!-- SUCCESS SCREEN -->
+<div class="success-screen" id="successView">
+  <div class="success-icon">✦</div>
+  <h2>Application received.</h2>
+  <p>We'll review your submission and get back to you<br/>within 48 hours. In the meantime — keep building.</p>
+</div>
+
+<script>
+  const selections = { q3: false, q4: false, q5: false };
+
+  function selectMCQ(groupId, hiddenId, el) {
+    const group = document.getElementById(groupId);
+    group.querySelectorAll('.mcq-option').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+    selections[groupId] = true;
+    // Write label text into hidden field so Formspree captures it
+    const label = el.querySelector('.mcq-label').textContent.trim();
+    document.getElementById(hiddenId).value = label;
+    updateProgress();
+  }
+
+  function syncOther() {
+    const val = document.getElementById('q5other').value.trim();
+    document.getElementById('hidden_q5').value = 'Other: ' + val;
+  }
+
+  function updateProgress() {
+    const q1 = document.getElementById('q1').value.trim();
+    const q2 = document.getElementById('q2').value.trim();
+    const q6 = document.getElementById('q6').value.trim();
+    let filled = 0;
+    if (q1) filled++;
+    if (q2) filled++;
+    if (selections.q3) filled++;
+    if (selections.q4) filled++;
+    if (selections.q5) filled++;
+    if (q6) filled++;
+    document.getElementById('progressBar').style.width = Math.round((filled / 6) * 100) + '%';
+    document.getElementById('submitBtn').disabled = filled < 6;
+  }
+
+  // Handle Formspree submission via fetch (no page redirect)
+  document.getElementById('kcoreForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    const errorBanner = document.getElementById('errorBanner');
+    btn.textContent = 'Sending...';
+    btn.classList.add('loading');
+    btn.disabled = true;
+    errorBanner.style.display = 'none';
+    try {
+      const res = await fetch(this.action, {
+        method: 'POST',
+        body: new FormData(this),
+        headers: { 'Accept': 'application/json' }
+      });
+      if (res.ok) {
+        document.getElementById('formView').style.display = 'none';
+        document.getElementById('successView').style.display = 'block';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        throw new Error('Submit failed');
+      }
+    } catch {
+      btn.textContent = 'Submit Application →';
+      btn.classList.remove('loading');
+      btn.disabled = false;
+      errorBanner.style.display = 'block';
+    }
+  });
+</script>
+</body>
+</html>
